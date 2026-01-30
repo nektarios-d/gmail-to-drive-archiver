@@ -99,6 +99,7 @@ Path length limits are enforced programmatically.
 - Go to https://script.google.com
 - Create a new project
 - Paste the script from this repository
+- Modify paths as needed (Config file coming soon)
 
 ### 2. Grant permissions
 On first run, Google will ask for access to:

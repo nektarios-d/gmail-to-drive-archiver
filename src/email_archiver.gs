@@ -163,23 +163,29 @@ function getOrCreateNestedPath_(parent, relativePath) {
  * @return {boolean} true if sent by user or company, false if external
  */
 function isSentByUserOrCompany_(fromEmail, config) {
-  // Extract domain from email address
-  const emailMatch = fromEmail.match(/<(.+?)>|(.+)/);
-  const emailAddress = emailMatch[1] || emailMatch[2] || fromEmail;
+  // Extract email from angle brackets if present
+  let emailAddress;
+  const angleMatch = fromEmail.match(/<(.+?)>/);
+  if (angleMatch) {
+    emailAddress = angleMatch[1];
+  } else {
+    // If no angle brackets, use the whole string
+    emailAddress = fromEmail;
+  }
+  
   const domain = emailAddress.split('@')[1] || '';
   
   // Check if it's the running user's email
   const userEmail = Session.getActiveUser().getEmail();
-  if (emailAddress.toLowerCase() === userEmail.toLowerCase()) {
-    return true;
-  }
+  const isUserEmail = emailAddress.toLowerCase() === userEmail.toLowerCase();
   
   // Check if domain matches company domains
+  let isDomainMatch = false;
   if (config.COMPANY_DOMAINS && config.COMPANY_DOMAINS.length > 0) {
-    return config.COMPANY_DOMAINS.some(d => domain.toLowerCase() === d.toLowerCase());
+    isDomainMatch = config.COMPANY_DOMAINS.some(d => domain.toLowerCase() === d.toLowerCase());
   }
   
-  return false;
+  return isUserEmail || isDomainMatch;
 }
 
 function createEmailPdfBlob_(message, pdfName) {

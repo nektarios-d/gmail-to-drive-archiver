@@ -30,18 +30,16 @@ function processProjectEmails() {
         let basePath;
 
         if (isSentEmail) {
-          // Sent emails: ROOT/BASE/PROJECT/SENT_SUBFOLDER/EMAIL_SUBFOLDER
-          const sentFolder = getOrCreateFolder_(projectFolder, config.SENT_SUBFOLDER_NAME);
-          emailTypeFolder = getOrCreateFolder_(sentFolder, config.EMAIL_SUBFOLDER_NAME);
+          // Sent emails: ROOT/BASE/PROJECT/SENT_SUBFOLDER (which may be nested)
+          emailTypeFolder = getOrCreateNestedPath_(projectFolder, config.SENT_SUBFOLDER_NAME);
           basePath =
             config.ROOT_FOLDER_NAME + '\\' +
             config.BASE_FOLDER_NAME + '\\' +
             projectName + '\\' +
-            config.SENT_SUBFOLDER_NAME + '\\' +
-            config.EMAIL_SUBFOLDER_NAME + '\\';
+            config.SENT_SUBFOLDER_NAME + '\\';
         } else {
-          // Received emails: ROOT/BASE/PROJECT/INBOX_SUBFOLDER/SENDER
-          const inboxFolder = getOrCreateFolder_(projectFolder, config.INBOX_SUBFOLDER_NAME);
+          // Received emails: ROOT/BASE/PROJECT/INBOX_SUBFOLDER (which may be nested) > SENDER
+          const inboxFolder = getOrCreateNestedPath_(projectFolder, config.INBOX_SUBFOLDER_NAME);
           const sender = sanitize_(extractSender_(fromEmail));
           emailTypeFolder = getOrCreateFolder_(inboxFolder, sender);
           basePath =
@@ -139,6 +137,23 @@ function processProjectEmails() {
       thread.removeLabel(label);
     });
   });
+}
+
+/**
+ * Create nested folder structure from a relative path (e.g., 'folder1/folder2/folder3')
+ * @param {GoogleAppsScript.Drive.Folder} parent - Parent folder to start from
+ * @param {string} relativePath - Relative path with / as separator (e.g., 'sent/emails/archive')
+ * @return {GoogleAppsScript.Drive.Folder} The final nested folder
+ */
+function getOrCreateNestedPath_(parent, relativePath) {
+  const parts = relativePath.split('/').filter(p => p.length > 0);
+  let current = parent;
+  
+  parts.forEach(folderName => {
+    current = getOrCreateFolder_(current, folderName);
+  });
+  
+  return current;
 }
 
 /**

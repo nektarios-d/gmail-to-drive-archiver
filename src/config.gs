@@ -4,13 +4,12 @@
 const CONFIG = {
   // Google Drive folder structure
   // These define the folder hierarchy where emails will be organized
-  // Received: Google Drive Root > NAS_INBOX > Εργα υπο εκτελεση > [PROJECT_NAME] > Επιστολες που μας στελνουν > [SENDER] > [INDEX_SUBJECT_DATE]
-  // Sent: Google Drive Root > NAS_INBOX > Εργα υπο εκτελεση > [PROJECT_NAME] > ΕΠΙΣΤΟΛΕΣ ΜΑΣ > EMAIL ΠΟΥ ΣΤΕΛΝΟΥΜΕ > [INDEX_SUBJECT_DATE]
+  // Received: Google Drive Root > NAS_INBOX > ΕΡΓΑ ΥΠΟ ΕΚΤΕΛΕΣΗ > [PROJECT_NAME] > ΕΠΙΣΤΟΛΕΣ ΠΟΥ ΜΑΣ ΣΤΕΛΝΟΥΝ > [SENDER] > [INDEX_SUBJECT_DATE] (INBOX can be nested using /)
+  // Sent: Google Drive Root > NAS_INBOX > ΕΡΓΑ ΥΠΟ ΕΚΤΕΛΕΣΗ > [PROJECT_NAME] > ΕΠΙΣΤΟΛΕΣ ΜΑΣ/EMAIL ΠΟΥ ΣΤΕΛΝΟΥΜΕ > [INDEX_SUBJECT_DATE] (can be nested using /)
   ROOT_FOLDER_NAME: 'NAS_INBOX',
   BASE_FOLDER_NAME: 'ΕΡΓΑ ΥΠΟ ΕΚΤΕΛΕΣΗ',
-  INBOX_SUBFOLDER_NAME: 'ΕΠΙΣΤΟΛΕΣ ΠΟΥ ΜΑΣ ΣΤΕΛΝΟΥΝ', // Folder for emails received from others
-  SENT_SUBFOLDER_NAME: 'ΕΠΙΣΤΟΛΕΣ ΜΑΣ',  // Folder for emails user/company sent
-  EMAIL_SUBFOLDER_NAME: 'EMAIL ΠΟΥ ΣΤΕΛΝΟΥΜΕ',  
+  INBOX_SUBFOLDER_NAME: 'ΕΠΙΣΤΟΛΕΣ ΠΟΥ ΜΑΣ ΣΤΕΛΝΟΥΝ', // Relative path for emails received from others (supports nested levels)
+  SENT_SUBFOLDER_NAME: 'ΕΠΙΣΤΟΛΕΣ ΜΑΣ/EMAIL ΠΟΥ ΣΤΕΛΝΟΥΜΕ',  // Relative path for sent emails (supports nested levels)  
 
   // Gmail labels
   // Emails with labels starting with this prefix will be processed

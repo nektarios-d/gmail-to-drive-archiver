@@ -12,9 +12,14 @@ function processProjectEmails() {
       label.getName().replace(config.LABEL_PREFIX, '').trim();
     const projectName = sanitize_(rawProjectName);
 
-    const projectFolder = getOrCreateFolder_(base, projectName);
-
     const threads = label.getThreads();
+
+    // Skip labels with no emails
+    if (threads.length === 0) {
+      return;
+    }
+
+    const projectFolder = getOrCreateFolder_(base, projectName);
 
     threads.forEach(thread => {
       const messages = thread.getMessages();

@@ -73,7 +73,7 @@ function processProjectEmails() {
             ? rawSubject.substring(0, Math.min(rawSubject.length, availableForSubject))
             : rawSubject.substring(0, 10);
 
-        const emailFolderName = `${index}_${safeSubject}_${date}`;
+        const emailFolderName = `${index}-${safeSubject}-${date}`;
         const emailFolder = emailTypeFolder.createFolder(emailFolderName);
 
         // Email PDF
@@ -114,7 +114,7 @@ function processProjectEmails() {
 
             safeFilename =
               baseName.substring(0, maxBaseLen) +
-              '__' + hash +
+              '--' + hash +
               extension;
 
             wasTruncated = true;
@@ -131,7 +131,7 @@ function processProjectEmails() {
               'Reason:\nWindows full path length limit';
 
             const infoFileName =
-              'ORIGINAL_FILENAME_' + safeFilename + '.txt';
+              'ORIGINAL_FILENAME-' + safeFilename + '.txt';
 
             emailFolder.createFile(infoFileName, infoText);
           }

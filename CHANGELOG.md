@@ -32,7 +32,6 @@ This project follows **Semantic Versioning**.
 - `getConfig()`, `showConfig()` and `resetConfigToDefaults()` helpers.
 - `ENV_FILENAME` config parameter to customize the runtime override filename.
 
-
 ### Notes
 - Configuration priority: hard-coded `CONFIG` defaults < file-based overrides.
 - The override filename can be customized by editing `CONFIG.ENV_FILENAME` in `src/config.gs` before deployment.

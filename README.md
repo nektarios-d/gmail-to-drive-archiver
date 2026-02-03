@@ -63,9 +63,9 @@ Projects/
 
 ---
 
-## 🏷 Gmail Label Convention
+## 🏷 Gmail Label Conventions
 
-Emails are selected for processing using Gmail labels:
+All emails (received and sent) use the same label convention:
 
 ```
 PROJECT/<project-id>
@@ -78,6 +78,15 @@ PROJECT/Project-123
 ```
 
 Only emails with a `PROJECT/*` label are processed.
+
+### Automatic Routing by Sender
+
+Emails are automatically routed to either **Incoming** or **Sent** folders based on the sender's email address:
+
+- **Sent Folder**: If the email was sent FROM `USER_EMAIL` or FROM any domain in `COMPANY_DOMAINS`
+- **Inbox Folder**: If the email was sent FROM any other email address
+
+This means you only need one label convention. The script automatically detects whether an email is inbound or outbound and saves it to the correct folder.
 
 ---
 
@@ -106,21 +115,30 @@ On first run, Google will ask for access to:
 - Gmail
 - Google Drive
 
-### 3. Label emails in Gmail
+### 3. Configure user email and company domains
+Edit `src/config.gs` and update these values:
+```javascript
+USER_EMAIL: 'your.email@company.com',        // Your Gmail address
+COMPANY_DOMAINS: ['company.com', 'other.com'], // Company email domains
+```
+
+These settings are used to automatically detect and route emails sent by you or your company to the **Sent** folder, while external emails go to the **Inbox** folder.
+
+### 4. Label emails in Gmail
 Apply a label such as:
 
 ```
 PROJECT/Project-123
 ```
 
-### 4. Run the script
+### 5. Run the script
 Execute:
 
 ```
 processProjectEmails
 ```
 
-Emails will be archived to Google Drive.
+Archives emails labeled with `PROJECT/*`. Emails are automatically routed to **Inbox** or **Sent** folders based on the sender's email address and the configured `USER_EMAIL` and `COMPANY_DOMAINS`.
 
 ---
 

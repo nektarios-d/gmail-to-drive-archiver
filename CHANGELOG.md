@@ -15,10 +15,21 @@ This project follows **Semantic Versioning**.
 - `setConfigValue(key, value)` helper to create/update override file entries programmatically.
 - `getConfig()`, `showConfig()` and `resetConfigToDefaults()` helpers.
 - `ENV_FILENAME` config parameter to customize the runtime override filename.
+- `USER_EMAIL` and `COMPANY_DOMAINS` config parameters for automatic sent email detection.
+- `SENT_SUBFOLDER_NAME` config parameter for organizing sent emails separately from received emails.
+- `isSentByUserOrCompany_()` helper function for automatic routing based on sender email/domain.
+
+### Changed
+- `email_archiver.gs` refactored: `processProjectEmails()` now automatically routes emails to Inbox or Sent folders based on sender.
+- Email routing is now automatic: emails FROM `USER_EMAIL` or `COMPANY_DOMAINS` go to `SENT_SUBFOLDER_NAME`, others go to `INBOX_SUBFOLDER_NAME`.
+- Removed `processSentEmails()` and separate `SENT/*` label convention; now using only `PROJECT/*` labels for all emails.
+- Removed `SENT_LABEL_PREFIX` config parameter (no longer needed with automatic routing).
 
 ### Notes
 - Configuration priority: hard-coded `CONFIG` defaults < file-based overrides.
 - The override filename can be customized by editing `CONFIG.ENV_FILENAME` in `src/config.gs` before deployment.
+- Sent and received emails are organized under the same `ROOT_FOLDER_NAME/BASE_FOLDER_NAME/<project-id>/` hierarchy, separated into `INBOX_SUBFOLDER_NAME` and `SENT_SUBFOLDER_NAME` based on sender.
+- **Breaking Change**: If you were using `processSentEmails()` with `SENT/*` labels, you must switch to using `PROJECT/*` labels only; the function is removed and emails are now automatically routed.
 
 ---
 

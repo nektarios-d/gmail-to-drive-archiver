@@ -13,8 +13,6 @@ function processProjectEmails() {
     const projectName = sanitize_(rawProjectName);
 
     const projectFolder = getOrCreateFolder_(base, projectName);
-    const inboxFolder =
-      getOrCreateFolder_(projectFolder, config.INBOX_SUBFOLDER_NAME);
 
     const threads = label.getThreads();
 
@@ -23,23 +21,45 @@ function processProjectEmails() {
 
       messages.forEach(message => {
 
-        const sender = sanitize_(extractSender_(message.getFrom()));
+        // Determine if this is a sent or received email based on sender
+        const fromEmail = message.getFrom();
+        const isSentEmail = isSentByUserOrCompany_(fromEmail, config);
+
+        // Different folder structures for sent vs received
+        let emailTypeFolder;
+        let basePath;
+
+        if (isSentEmail) {
+          // Sent emails: ROOT/BASE/PROJECT/SENT_SUBFOLDER/EMAIL_SUBFOLDER
+          const sentFolder = getOrCreateFolder_(projectFolder, config.SENT_SUBFOLDER_NAME);
+          emailTypeFolder = getOrCreateFolder_(sentFolder, config.EMAIL_SUBFOLDER_NAME);
+          basePath =
+            config.ROOT_FOLDER_NAME + '\\' +
+            config.BASE_FOLDER_NAME + '\\' +
+            projectName + '\\' +
+            config.SENT_SUBFOLDER_NAME + '\\' +
+            config.EMAIL_SUBFOLDER_NAME + '\\';
+        } else {
+          // Received emails: ROOT/BASE/PROJECT/INBOX_SUBFOLDER/SENDER
+          const inboxFolder = getOrCreateFolder_(projectFolder, config.INBOX_SUBFOLDER_NAME);
+          const sender = sanitize_(extractSender_(fromEmail));
+          emailTypeFolder = getOrCreateFolder_(inboxFolder, sender);
+          basePath =
+            config.ROOT_FOLDER_NAME + '\\' +
+            config.BASE_FOLDER_NAME + '\\' +
+            projectName + '\\' +
+            config.INBOX_SUBFOLDER_NAME + '\\' +
+            sender + '\\';
+        }
+
         const date = Utilities.formatDate(
           message.getDate(),
           Session.getScriptTimeZone(),
           'yyyy-MM-dd'
         );
 
-        const senderFolder = getOrCreateFolder_(inboxFolder, sender);
-        const index = getNextIndex_(senderFolder);
-
+        const index = getNextIndex_(emailTypeFolder);
         const rawSubject = sanitize_(message.getSubject() || 'Χωρις_Θεμα');
-
-        const basePath =
-          config.ROOT_FOLDER_NAME + '\\' +
-          config.BASE_FOLDER_NAME + '\\' +
-          projectName + '\\' + config.INBOX_SUBFOLDER_NAME + '\\' +
-          sender + '\\';
 
         const staticFolderPart = `${index}__${date}`;
         const availableForSubject =
@@ -51,7 +71,7 @@ function processProjectEmails() {
             : rawSubject.substring(0, 10);
 
         const emailFolderName = `${index}_${safeSubject}_${date}`;
-        const emailFolder = senderFolder.createFolder(emailFolderName);
+        const emailFolder = emailTypeFolder.createFolder(emailFolderName);
 
         // Email PDF
         const pdfBlob = createEmailPdfBlob_(message, config.PDF_FILENAME);
@@ -119,6 +139,32 @@ function processProjectEmails() {
       thread.removeLabel(label);
     });
   });
+}
+
+/**
+ * Check if email was sent FROM user or company domain
+ * @param {string} fromEmail - Email address from message.getFrom()
+ * @param {Object} config - Configuration object
+ * @return {boolean} true if sent by user or company, false if external
+ */
+function isSentByUserOrCompany_(fromEmail, config) {
+  // Extract domain from email address
+  const emailMatch = fromEmail.match(/<(.+?)>|(.+)/);
+  const emailAddress = emailMatch[1] || emailMatch[2] || fromEmail;
+  const domain = emailAddress.split('@')[1] || '';
+  
+  // Check if it's the running user's email
+  const userEmail = Session.getActiveUser().getEmail();
+  if (emailAddress.toLowerCase() === userEmail.toLowerCase()) {
+    return true;
+  }
+  
+  // Check if domain matches company domains
+  if (config.COMPANY_DOMAINS && config.COMPANY_DOMAINS.length > 0) {
+    return config.COMPANY_DOMAINS.some(d => domain.toLowerCase() === d.toLowerCase());
+  }
+  
+  return false;
 }
 
 function createEmailPdfBlob_(message, pdfName) {

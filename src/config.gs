@@ -4,15 +4,24 @@
 const CONFIG = {
   // Google Drive folder structure
   // These define the folder hierarchy where emails will be organized
-  // Structure: Google Drive Root > NAS_INBOX > Εργα υπο εκτελεση > [PROJECT_NAME] > Επιστολες που μας στελνουν > [SENDER] > [EMAIL_FOLDER]
+  // Received: Google Drive Root > NAS_INBOX > Εργα υπο εκτελεση > [PROJECT_NAME] > Επιστολες που μας στελνουν > [SENDER] > [INDEX_SUBJECT_DATE]
+  // Sent: Google Drive Root > NAS_INBOX > Εργα υπο εκτελεση > [PROJECT_NAME] > ΕΠΙΣΤΟΛΕΣ ΜΑΣ > EMAIL ΠΟΥ ΣΤΕΛΝΟΥΜΕ > [INDEX_SUBJECT_DATE]
   ROOT_FOLDER_NAME: 'NAS_INBOX',
   BASE_FOLDER_NAME: 'Εργα υπο εκτελεση',
   INBOX_SUBFOLDER_NAME: 'Επιστολες που μας στελνουν',
-  
+  SENT_SUBFOLDER_NAME: 'ΕΠΙΣΤΟΛΕΣ ΜΑΣ',  // Folder for emails user/company sent
+  EMAIL_SUBFOLDER_NAME: 'EMAIL ΠΟΥ ΣΤΕΛΝΟΥΜΕ',  
+
   // Gmail labels
   // Emails with labels starting with this prefix will be processed
+  // Routing: if sent from USER_EMAIL or COMPANY_DOMAIN, goes to SENT_SUBFOLDER_NAME, else INBOX_SUBFOLDER_NAME
   // Example: PROJECT/001, PROJECT/Client-A will be archived
   LABEL_PREFIX: 'PROJECT/',
+  
+  // Company domains to identify sent emails
+  // If email is sent FROM the running user's email or any of these domains, it goes to SENT folder instead of INBOX
+  // Add your company domain(s)
+  COMPANY_DOMAINS: ['company.com', 'another-domain.com'],  // Company email domains
   
   // Path constraints
   // Windows has a 260 character limit for full file paths

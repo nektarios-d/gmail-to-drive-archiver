@@ -1,25 +1,20 @@
 function processProjectEmails() {
-
-  const ROOT_FOLDER_NAME = 'NAS_INBOX';
-  const BASE_FOLDER_NAME = 'Εργα υπο εκτελεση';
-  const LABEL_PREFIX = 'PROJECT/';
-  const MAX_PATH_LEN = 220; // safe Windows limit
-
-  const root = getOrCreateFolder_(DriveApp.getRootFolder(), ROOT_FOLDER_NAME);
-  const base = getOrCreateFolder_(root, BASE_FOLDER_NAME);
+  const config = getConfig();
+  const root = getOrCreateFolder_(DriveApp.getRootFolder(), config.ROOT_FOLDER_NAME);
+  const base = getOrCreateFolder_(root, config.BASE_FOLDER_NAME);
 
   const labels = GmailApp.getUserLabels()
-    .filter(l => l.getName().startsWith(LABEL_PREFIX));
+    .filter(l => l.getName().startsWith(config.LABEL_PREFIX));
 
   labels.forEach(label => {
 
     const rawProjectName =
-      label.getName().replace(LABEL_PREFIX, '').trim();
+      label.getName().replace(config.LABEL_PREFIX, '').trim();
     const projectName = sanitize_(rawProjectName);
 
     const projectFolder = getOrCreateFolder_(base, projectName);
     const inboxFolder =
-      getOrCreateFolder_(projectFolder, 'Επιστολες που μας στελνουν');
+      getOrCreateFolder_(projectFolder, config.INBOX_SUBFOLDER_NAME);
 
     const threads = label.getThreads();
 
@@ -41,15 +36,14 @@ function processProjectEmails() {
         const rawSubject = sanitize_(message.getSubject() || 'Χωρις_Θεμα');
 
         const basePath =
-          'D:\\Google Drive\\' +
-          ROOT_FOLDER_NAME + '\\' +
-          BASE_FOLDER_NAME + '\\' +
-          projectName + '\\Επιστολες που μας στελνουν\\' +
+          config.ROOT_FOLDER_NAME + '\\' +
+          config.BASE_FOLDER_NAME + '\\' +
+          projectName + '\\' + config.INBOX_SUBFOLDER_NAME + '\\' +
           sender + '\\';
 
         const staticFolderPart = `${index}__${date}`;
         const availableForSubject =
-          MAX_PATH_LEN - basePath.length - staticFolderPart.length - 2;
+          config.MAX_PATH_LEN - basePath.length - staticFolderPart.length - 2;
 
         const safeSubject =
           availableForSubject > 10
@@ -60,13 +54,13 @@ function processProjectEmails() {
         const emailFolder = senderFolder.createFolder(emailFolderName);
 
         // Email PDF
-        const pdfBlob = createEmailPdfBlob_(message, 'email.pdf');
+        const pdfBlob = createEmailPdfBlob_(message, config.PDF_FILENAME);
         emailFolder.createFile(pdfBlob);
 
         // Attachments
         const attachments = message.getAttachments({
-          includeInlineImages: false,
-          includeAttachments: true
+          includeInlineImages: config.INCLUDE_INLINE_IMAGES,
+          includeAttachments: config.INCLUDE_ATTACHMENTS
         });
 
         attachments.forEach(att => {
@@ -80,7 +74,7 @@ function processProjectEmails() {
             basePath + emailFolderName + '\\';
 
           const availableForFilename =
-            MAX_PATH_LEN - attachmentBasePath.length;
+            config.MAX_PATH_LEN - attachmentBasePath.length;
 
           let safeFilename;
           let wasTruncated = false;
@@ -91,8 +85,8 @@ function processProjectEmails() {
             const hash = shortHash_(originalName);
             const maxBaseLen =
               Math.max(
-                10,
-                availableForFilename - extension.length - hash.length - 2
+                config.MIN_FILENAME_LENGTH,
+                availableForFilename - extension.length - config.HASH_LENGTH - 2
               );
 
             safeFilename =

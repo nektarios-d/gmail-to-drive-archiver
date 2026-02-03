@@ -6,6 +6,24 @@ This project follows **Semantic Versioning**.
 
 ---
 
+## [1.1.0] - 2026-02-03
+
+### Added
+- Move configuration defaults to `src/config.gs` for clear, in-repo defaults.
+- `src/configLoader.gs` for loading configuration and `.env` support from Google Drive root.
+- Support for `.env` file overrides (KEY=VALUE format) in Drive root.
+- `setConfigValue(key, value)` helper to create/update `.env` entries programmatically.
+- `getConfig()`, `showConfig()`, `initializeConfig()`, and `resetConfigToDefaults()` helpers.
+
+### Changed
+- Removed `PropertiesService` usage; runtime overrides now come from `.env` only.
+- `email_archiver.gs` updated to use `getConfig()` and apply merged configuration.
+
+### Notes
+- Configuration priority: hard-coded `CONFIG` defaults < `.env` overrides.
+
+---
+
 ## [1.0.0] - Initial Release
 
 ### Added

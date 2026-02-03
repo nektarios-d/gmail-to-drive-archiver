@@ -124,6 +124,42 @@ Emails will be archived to Google Drive.
 
 ---
 
+## ⚙️ Configuration
+
+Configuration defaults live in `src/config.gs`. You can override selected values at runtime by placing a `.env` file in your Google Drive root (the account running the script).
+
+.env rules:
+- File name: `.env` in Google Drive root
+- Format: `KEY=VALUE` (one per line)
+- Lines beginning with `#` are comments
+- Only keys that exist in `CONFIG` are accepted
+- Values are parsed as JSON where possible (so `true`, `false`, and numbers work)
+
+Example `.env`:
+```
+ROOT_FOLDER_NAME=MY_ARCHIVE
+MAX_PATH_LEN=250
+INCLUDE_INLINE_IMAGES=true
+LABEL_PREFIX="ARCHIVE/"
+# comment here
+```
+
+Available helper functions (run from the Apps Script editor):
+- `getConfig()` — returns the merged configuration (defaults + `.env` overrides)
+- `setConfigValue(key, value)` — updates or creates the `.env` file with the given key/value
+- `resetConfigToDefaults()` — deletes the `.env` file (reverts to defaults)
+- `showConfig()` — logs the current merged config
+- `initializeConfig()` — initializes and logs current config (optional)
+
+Notes:
+- There is no PropertiesService usage; `.env` is the only runtime override mechanism.
+- Defaults remain visible and authoritative in `src/config.gs`.
+
+Quick note about initialization:
+- `processProjectEmails()` calls `getConfig()` at runtime to merge the hard-coded `CONFIG` defaults with any `.env` overrides. You do not need to run `initializeConfig()` before normal execution.
+- `initializeConfig()` is provided as a convenience for manually inspecting or logging the merged configuration from the Apps Script editor; use it only when you want to view the current config in the execution logs.
+
+
 ## ⚠️ Known Limitations
 
 - Designed specifically for Gmail  

@@ -17,7 +17,7 @@ function showConfig() {
  */
 function loadEnvFile_() {
   try {
-    const envFiles = DriveApp.getRootFolder().getFilesByName('.env');
+    const envFiles = DriveApp.getRootFolder().getFilesByName(CONFIG.ENV_FILENAME);
     
     if (!envFiles.hasNext()) {
       return {}; // No .env file found
@@ -49,7 +49,7 @@ function loadEnvFile_() {
       }
     });
     
-    Logger.log('Loaded overrides from .env file');
+    Logger.log('Loaded overrides from ' + CONFIG.ENV_FILENAME);
     return envOverrides;
   } catch (e) {
     Logger.log('Warning: Could not read .env file: ' + e.toString());
@@ -95,7 +95,7 @@ function setConfigValue(key, value) {
   
   try {
     const root = DriveApp.getRootFolder();
-    const envFiles = root.getFilesByName('.env');
+    const envFiles = root.getFilesByName(CONFIG.ENV_FILENAME);
     let envContent = '';
     let envFile = null;
     
@@ -127,14 +127,14 @@ function setConfigValue(key, value) {
     
     const newContent = updatedLines.join('\n');
     
-    // Update or create .env file
+    // Update or create env file
     if (envFile) {
       envFile.setContent(newContent);
     } else {
-      root.createFile('.env', newContent);
+      root.createFile(CONFIG.ENV_FILENAME, newContent);
     }
     
-    Logger.log(`Config value set in .env: ${key} = ${value}`);
+    Logger.log(`Config value set in ${CONFIG.ENV_FILENAME}: ${key} = ${value}`);
   } catch (e) {
     Logger.log('Error: Could not write to .env file: ' + e.toString());
   }
@@ -146,13 +146,13 @@ function setConfigValue(key, value) {
 function resetConfigToDefaults() {
   try {
     const root = DriveApp.getRootFolder();
-    const envFiles = root.getFilesByName('.env');
+    const envFiles = root.getFilesByName(CONFIG.ENV_FILENAME);
     
     if (envFiles.hasNext()) {
       envFiles.next().setTrashed(true);
-      Logger.log('.env file removed, using CONFIG defaults');
+      Logger.log(CONFIG.ENV_FILENAME + ' removed, using CONFIG defaults');
     } else {
-      Logger.log('No .env file found, already using CONFIG defaults');
+      Logger.log('No ' + CONFIG.ENV_FILENAME + ' found, already using CONFIG defaults');
     }
   } catch (e) {
     Logger.log('Error: Could not delete .env file: ' + e.toString());

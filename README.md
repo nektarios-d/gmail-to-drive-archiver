@@ -126,16 +126,16 @@ Emails will be archived to Google Drive.
 
 ## ⚙️ Configuration
 
-Configuration defaults live in `src/config.gs`. You can override selected values at runtime by placing a `.env` file in your Google Drive root (the account running the script).
+Configuration defaults live in `src/config.gs`. You can override selected values at runtime by placing an env file in your Google Drive root (the account running the script). The runtime filename is configurable via `CONFIG.ENV_FILENAME` (default: `.gmail-to-drive-archiver.env`).
 
-.env rules:
-- File name: `.env` in Google Drive root
+Env file rules:
+- File name: configurable via `CONFIG.ENV_FILENAME` (default `.gmail-to-drive-archiver.env`) and should be placed in Google Drive root
 - Format: `KEY=VALUE` (one per line)
 - Lines beginning with `#` are comments
 - Only keys that exist in `CONFIG` are accepted
 - Values are parsed as JSON where possible (so `true`, `false`, and numbers work)
 
-Example `.env`:
+Example env file (use `CONFIG.ENV_FILENAME` name):
 ```
 ROOT_FOLDER_NAME=MY_ARCHIVE
 MAX_PATH_LEN=250

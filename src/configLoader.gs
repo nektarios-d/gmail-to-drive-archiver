@@ -2,11 +2,9 @@
 // Loads configuration from .env file with fallback to hard-coded CONFIG defaults
 
 /**
- * Initialize configuration - sets up storage structure
- * Can be called multiple times safely
+ * Display current configuration (for debugging)
  */
-function initializeConfig() {
-  Logger.log('Configuration initialized. CONFIG defaults loaded.');
+function showConfig() {
   const config = loadConfig_();
   Logger.log('Current Configuration:');
   Logger.log(JSON.stringify(config, null, 2));
@@ -161,11 +159,3 @@ function resetConfigToDefaults() {
   }
 }
 
-/**
- * Display current configuration (for debugging)
- */
-function showConfig() {
-  const config = loadConfig_();
-  Logger.log('Current Configuration:');
-  Logger.log(JSON.stringify(config, null, 2));
-}

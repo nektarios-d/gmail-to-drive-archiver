@@ -149,15 +149,13 @@ Available helper functions (run from the Apps Script editor):
 - `setConfigValue(key, value)` — updates or creates the `.env` file with the given key/value
 - `resetConfigToDefaults()` — deletes the `.env` file (reverts to defaults)
 - `showConfig()` — logs the current merged config
-- `initializeConfig()` — initializes and logs current config (optional)
 
 Notes:
 - There is no PropertiesService usage; `.env` is the only runtime override mechanism.
 - Defaults remain visible and authoritative in `src/config.gs`.
 
 Quick note about initialization:
-- `processProjectEmails()` calls `getConfig()` at runtime to merge the hard-coded `CONFIG` defaults with any `.env` overrides. You do not need to run `initializeConfig()` before normal execution.
-- `initializeConfig()` is provided as a convenience for manually inspecting or logging the merged configuration from the Apps Script editor; use it only when you want to view the current config in the execution logs.
+- `processProjectEmails()` calls `getConfig()` at runtime to merge the hard-coded `CONFIG` defaults with any `.env` overrides.
 
 
 ## ⚠️ Known Limitations

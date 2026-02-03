@@ -6,6 +6,22 @@ This project follows **Semantic Versioning**.
 
 ---
 
+## [1.1.0] - 2026-02-03
+
+### Added
+- Move configuration defaults to `src/config.gs` for clear, in-repo defaults.
+- `src/configLoader.gs` for loading configuration and runtime overrides from Google Drive root.
+- Support for runtime overrides via file (default filename: `.gmail-to-drive-archiver.env`, configurable via `CONFIG.ENV_FILENAME`).
+- `setConfigValue(key, value)` helper to create/update override file entries programmatically.
+- `getConfig()`, `showConfig()` and `resetConfigToDefaults()` helpers.
+- `ENV_FILENAME` config parameter to customize the runtime override filename.
+
+### Notes
+- Configuration priority: hard-coded `CONFIG` defaults < file-based overrides.
+- The override filename can be customized by editing `CONFIG.ENV_FILENAME` in `src/config.gs` before deployment.
+
+---
+
 ## [1.0.0] - Initial Release
 
 ### Added

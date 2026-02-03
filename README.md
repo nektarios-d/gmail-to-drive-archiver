@@ -124,6 +124,40 @@ Emails will be archived to Google Drive.
 
 ---
 
+## ⚙️ Configuration
+
+Configuration defaults live in `src/config.gs`. You can override selected values at runtime by placing an env file in your Google Drive root (the account running the script). The runtime filename is configurable via `CONFIG.ENV_FILENAME` (default: `.gmail-to-drive-archiver.env`).
+
+Env file rules:
+- File name: configurable via `CONFIG.ENV_FILENAME` (default `.gmail-to-drive-archiver.env`) and should be placed in Google Drive root
+- Format: `KEY=VALUE` (one per line)
+- Lines beginning with `#` are comments
+- Only keys that exist in `CONFIG` are accepted
+- Values are parsed as JSON where possible (so `true`, `false`, and numbers work)
+
+Example env file (use `CONFIG.ENV_FILENAME` name):
+```
+ROOT_FOLDER_NAME=MY_ARCHIVE
+MAX_PATH_LEN=250
+INCLUDE_INLINE_IMAGES=true
+LABEL_PREFIX="ARCHIVE/"
+# comment here
+```
+
+Available helper functions (run from the Apps Script editor):
+- `getConfig()` — returns the merged configuration (defaults + `.env` overrides)
+- `setConfigValue(key, value)` — updates or creates the `.env` file with the given key/value
+- `resetConfigToDefaults()` — deletes the `.env` file (reverts to defaults)
+- `showConfig()` — logs the current merged config
+
+Notes:
+- There is no PropertiesService usage; `.env` is the only runtime override mechanism.
+- Defaults remain visible and authoritative in `src/config.gs`.
+
+Quick note about initialization:
+- `processProjectEmails()` calls `getConfig()` at runtime to merge the hard-coded `CONFIG` defaults with any `.env` overrides.
+
+
 ## ⚠️ Known Limitations
 
 - Designed specifically for Gmail  

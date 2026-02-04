@@ -24,124 +24,159 @@ function processProjectEmails() {
     threads.forEach(thread => {
       const messages = thread.getMessages();
 
-      messages.forEach(message => {
+      if (!messages || messages.length === 0) {
+        thread.removeLabel(label);
+        return;
+      }
 
-        // Determine if this is a sent or received email based on sender
-        const fromEmail = message.getFrom();
-        const isSentEmail = isSentByUserOrCompany_(fromEmail, config);
+      const firstMessage = messages[0];
+      const lastMessage = messages[messages.length - 1];
 
-        // Different folder structures for sent vs received
-        let emailTypeFolder;
-        let basePath;
+      // Determine destination folder using the existing sent/received logic
+      const fromEmail = lastMessage.getFrom();
+      const isSentEmail = isSentByUserOrCompany_(fromEmail, config);
 
-        if (isSentEmail) {
-          // Sent emails: ROOT/BASE/PROJECT/SENT_SUBFOLDER (which may be nested)
-          emailTypeFolder = getOrCreateNestedPath_(projectFolder, config.SENT_SUBFOLDER_NAME);
-          basePath =
-            config.ROOT_FOLDER_NAME + '\\' +
-            config.BASE_FOLDER_NAME + '\\' +
-            projectName + '\\' +
-            config.SENT_SUBFOLDER_NAME + '\\';
-        } else {
-          // Received emails: ROOT/BASE/PROJECT/INBOX_SUBFOLDER (which may be nested) > SENDER
-          const inboxFolder = getOrCreateNestedPath_(projectFolder, config.INBOX_SUBFOLDER_NAME);
-          const sender = sanitize_(extractSender_(fromEmail));
-          emailTypeFolder = getOrCreateFolder_(inboxFolder, sender);
-          basePath =
-            config.ROOT_FOLDER_NAME + '\\' +
-            config.BASE_FOLDER_NAME + '\\' +
-            projectName + '\\' +
-            config.INBOX_SUBFOLDER_NAME + '\\' +
-            sender + '\\';
-        }
+      let emailTypeFolder;
+      let basePath;
 
-        const date = Utilities.formatDate(
-          message.getDate(),
-          Session.getScriptTimeZone(),
-          'yyyy-MM-dd'
-        );
+      if (isSentEmail) {
+        // Sent emails: ROOT/BASE/PROJECT/SENT_SUBFOLDER (which may be nested)
+        emailTypeFolder = getOrCreateNestedPath_(projectFolder, config.SENT_SUBFOLDER_NAME);
+        basePath =
+          config.ROOT_FOLDER_NAME + '\\' +
+          config.BASE_FOLDER_NAME + '\\' +
+          projectName + '\\' +
+          config.SENT_SUBFOLDER_NAME + '\\';
+      } else {
+        // Received emails: ROOT/BASE/PROJECT/INBOX_SUBFOLDER (which may be nested) > SENDER
+        const inboxFolder = getOrCreateNestedPath_(projectFolder, config.INBOX_SUBFOLDER_NAME);
+        const sender = sanitize_(extractSender_(fromEmail));
+        emailTypeFolder = getOrCreateFolder_(inboxFolder, sender);
+        basePath =
+          config.ROOT_FOLDER_NAME + '\\' +
+          config.BASE_FOLDER_NAME + '\\' +
+          projectName + '\\' +
+          config.INBOX_SUBFOLDER_NAME + '\\' +
+          sender + '\\';
+      }
 
-        const index = getNextIndex_(emailTypeFolder);
-        const rawSubject = sanitize_(message.getSubject() || 'Χωρις_Θεμα');
+      const threadDate = Utilities.formatDate(
+        lastMessage.getDate(),
+        Session.getScriptTimeZone(),
+        'yyyy-MM-dd'
+      );
 
-        const staticFolderPart = `${index}__${date}`;
-        const availableForSubject =
-          config.MAX_PATH_LEN - basePath.length - staticFolderPart.length - 2;
+      const index = getNextIndex_(emailTypeFolder);
+      const subjectSource = (config.THREAD_FOLDER_SUBJECT_SOURCE || 'last').toLowerCase();
+      const subjectMessage = subjectSource === 'first' ? firstMessage : lastMessage;
+      const rawSubject = sanitize_(subjectMessage.getSubject() || 'Χωρις_Θεμα');
 
-        const safeSubject =
-          availableForSubject > 10
-            ? rawSubject.substring(0, Math.min(rawSubject.length, availableForSubject))
-            : rawSubject.substring(0, 10);
+      const staticFolderPart = `${index}__${threadDate}`;
+      const availableForSubject =
+        config.MAX_PATH_LEN - basePath.length - staticFolderPart.length - 2;
 
-        const emailFolderName = `${index}-${safeSubject}-${date}`;
-        const emailFolder = emailTypeFolder.createFolder(emailFolderName);
+      const safeSubject =
+        availableForSubject > 10
+          ? rawSubject.substring(0, Math.min(rawSubject.length, availableForSubject))
+          : rawSubject.substring(0, 10);
 
-        // Email PDF
-        const pdfBlob = createEmailPdfBlob_(message, config.PDF_FILENAME);
-        emailFolder.createFile(pdfBlob);
+      const threadFolderName = `${index}-${safeSubject}-${threadDate}`;
+      const threadFolder = emailTypeFolder.createFolder(threadFolderName);
 
-        // Attachments
-        const attachments = message.getAttachments({
-          includeInlineImages: config.INCLUDE_INLINE_IMAGES,
-          includeAttachments: config.INCLUDE_ATTACHMENTS
-        });
+      // Save the whole thread as a single PDF (dated by last message)
+      threadFolder.createFile(createThreadPdfBlob_(messages, config.PDF_FILENAME));
 
-        attachments.forEach(att => {
-
-          const originalName = sanitize_(att.getName());
-          const dot = originalName.lastIndexOf('.');
-          const baseName = dot > 0 ? originalName.substring(0, dot) : originalName;
-          const extension = dot > 0 ? originalName.substring(dot) : '';
-
-          const attachmentBasePath =
-            basePath + emailFolderName + '\\';
-
-          const availableForFilename =
-            config.MAX_PATH_LEN - attachmentBasePath.length;
-
-          let safeFilename;
-          let wasTruncated = false;
-
-          if (originalName.length <= availableForFilename) {
-            safeFilename = originalName;
-          } else {
-            const hash = shortHash_(originalName);
-            const maxBaseLen =
-              Math.max(
-                config.MIN_FILENAME_LENGTH,
-                availableForFilename - extension.length - config.HASH_LENGTH - 2
-              );
-
-            safeFilename =
-              baseName.substring(0, maxBaseLen) +
-              '--' + hash +
-              extension;
-
-            wasTruncated = true;
-          }
-
-          emailFolder.createFile(
-            att.copyBlob().setName(safeFilename)
-          );
-
-          if (wasTruncated) {
-            const infoText =
-              'Original filename:\n' + originalName + '\n\n' +
-              'Saved as:\n' + safeFilename + '\n\n' +
-              'Reason:\nWindows full path length limit';
-
-            const infoFileName =
-              'ORIGINAL_FILENAME-' + safeFilename + '.txt';
-
-            emailFolder.createFile(infoFileName, infoText);
-          }
-        });
-
+      // Save attachments only from the last message in the thread
+      const attachments = lastMessage.getAttachments({
+        includeInlineImages: config.INCLUDE_INLINE_IMAGES,
+        includeAttachments: config.INCLUDE_ATTACHMENTS
       });
 
+      attachments.forEach(att => {
+        const originalName = sanitize_(att.getName());
+        const dot = originalName.lastIndexOf('.');
+        const baseName = dot > 0 ? originalName.substring(0, dot) : originalName;
+        const extension = dot > 0 ? originalName.substring(dot) : '';
+
+        const attachmentBasePath = basePath + threadFolderName + '\\';
+        const availableForFilename = config.MAX_PATH_LEN - attachmentBasePath.length;
+
+        let safeFilename;
+        let wasTruncated = false;
+
+        if (originalName.length <= availableForFilename) {
+          safeFilename = originalName;
+        } else {
+          const hash = shortHash_(originalName);
+          const maxBaseLen = Math.max(
+            config.MIN_FILENAME_LENGTH,
+            availableForFilename - extension.length - config.HASH_LENGTH - 2
+          );
+
+          safeFilename =
+            baseName.substring(0, maxBaseLen) +
+            '--' + hash +
+            extension;
+
+          wasTruncated = true;
+        }
+
+        threadFolder.createFile(att.copyBlob().setName(safeFilename));
+
+        if (wasTruncated) {
+          const infoText =
+            'Original filename:\n' + originalName + '\n\n' +
+            'Saved as:\n' + safeFilename + '\n\n' +
+            'Reason:\nWindows full path length limit';
+
+          const infoFileName = 'ORIGINAL_FILENAME-' + safeFilename + '.txt';
+          threadFolder.createFile(infoFileName, infoText);
+        }
+      });
+
+      // Remove the label from the thread after archiving
       thread.removeLabel(label);
     });
   });
+}
+
+function createThreadPdfBlob_(messages, pdfName) {
+  const timezone = Session.getScriptTimeZone();
+
+  const items = messages.map((m, idx) => {
+    const date = Utilities.formatDate(m.getDate(), timezone, 'yyyy-MM-dd HH:mm:ss');
+    const subject = sanitize_(m.getSubject() || '');
+    const from = m.getFrom();
+    const to = (typeof m.getTo === 'function') ? (m.getTo() || '') : '';
+    const cc = (typeof m.getCc === 'function') ? (m.getCc() || '') : '';
+
+    return `
+      <div style="page-break-inside:avoid; margin-bottom:20px;">
+        <div style="font-size:12px; color:#333;">
+          <p style="margin:0;"><b>#</b> ${idx + 1}</p>
+          <p style="margin:0;"><b>From:</b> ${from}</p>
+          ${to ? `<p style="margin:0;"><b>To:</b> ${to}</p>` : ''}
+          ${cc ? `<p style="margin:0;"><b>Cc:</b> ${cc}</p>` : ''}
+          <p style="margin:0;"><b>Date:</b> ${date}</p>
+          ${subject ? `<p style="margin:0;"><b>Subject:</b> ${subject}</p>` : ''}
+        </div>
+        <hr>
+        <div>${m.getBody()}</div>
+      </div>
+    `;
+  }).join('\n');
+
+  const html = `
+    <html>
+      <body style="font-family:Arial,Helvetica,sans-serif;">
+        ${items}
+      </body>
+    </html>
+  `;
+
+  return Utilities
+    .newBlob(html, MimeType.HTML, pdfName)
+    .getAs(MimeType.PDF);
 }
 
 /**
@@ -232,7 +267,7 @@ function getNextIndex_(folder) {
   let max = 0;
   const it = folder.getFolders();
   while (it.hasNext()) {
-    const m = it.next().getName().match(/^(\d+)_/);
+    const m = it.next().getName().match(/^(\d+)[-_]/);
     if (m) max = Math.max(max, parseInt(m[1], 10));
   }
   return String(max + 1).padStart(2, '0');

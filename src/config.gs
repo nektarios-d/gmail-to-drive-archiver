@@ -37,6 +37,11 @@ const CONFIG = {
   PDF_FILENAME: 'email.pdf',
   INCLUDE_INLINE_IMAGES: false,  // Exclude inline images from attachments
   INCLUDE_ATTACHMENTS: true,     // Include regular attachments
+
+  // Thread folder naming
+  // Controls which subject is used when naming the thread folder.
+  // Options: 'last' (default) or 'first'
+  THREAD_FOLDER_SUBJECT_SOURCE: 'last',
   // Runtime overrides file (placed in Google Drive root)
   // Change this if you want a different filename for runtime overrides
   ENV_FILENAME: '.gmail-to-drive-archiver.env',
